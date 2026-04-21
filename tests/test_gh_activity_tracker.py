@@ -99,3 +99,33 @@ class TestActivityStorage(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    def test_format_csv_header(self):
+        """CSV formatter includes correct headers."""
+        data = [{
+            "repo": "test/repo",
+            "stars": 100,
+            "forks": 20,
+            "open_issues": 5,
+            "commits_30d": 42,
+            "language": "Python",
+            "last_updated": "2026-04-20T12:00:00Z",
+        }]
+        result = format_csv(data)
+        lines = result.strip().split("\n")
+        self.assertIn("Repository", lines[0])
+        self.assertIn("Stars", lines[0])
+
+    def test_storage_schema_version(self):
+        """Storage tracks schema version for migrations."""
+        import tempfile
+        import os
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = os.path.join(tmpdir, "schema_test.db")
+            storage = ActivityStorage(db_path=db_path)
+            self.assertTrue(hasattr(storage, "schema_version"))
+
+    def test_tracker_has_rate_limit_props(self):
+        """Tracker exposes rate limit properties for monitoring."""
+        tracker = ActivityTracker()
+        self.assertTrue(hasattr(tracker, "rate_limit_remaining"))
+        self.assertTrue(hasattr(tracker, "rate_limit_reset"))
