@@ -9,10 +9,17 @@ from typing import Any
 
 class ActivityStorage:
     """Persistent storage for activity snapshots using SQLite."""
+    
+    SCHEMA_VERSION = 1
 
     def __init__(self, db_path: str | None = None):
         self.db_path = db_path or os.path.expanduser("~/.gh-activity-tracker.db")
         self._init_db()
+
+    @property
+    def schema_version(self) -> int:
+        """Return current schema version for migrations."""
+        return self.SCHEMA_VERSION
 
     def _init_db(self) -> None:
         """Create tables if they don't exist."""

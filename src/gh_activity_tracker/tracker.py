@@ -12,6 +12,16 @@ class ActivityTracker:
     def __init__(self, token: str | None = None):
         self.api = GitHubAPI(token=token)
 
+    @property
+    def rate_limit_remaining(self) -> int | None:
+        """Remaining API rate limit requests."""
+        return self.api.rate_limit_remaining
+
+    @property
+    def rate_limit_reset(self) -> int | None:
+        """Timestamp when rate limit resets."""
+        return self.api.rate_limit_reset
+
     def track_repo(self, repo: str, days: int = 30) -> dict[str, Any]:
         """Track activity for a single repository."""
         return self.api.get_activity_summary(repo, days=days)

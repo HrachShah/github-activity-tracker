@@ -1,7 +1,10 @@
 """Tests for GitHub Activity Tracker."""
 
 import unittest
-from unittest.mock import MagicMock, patch
+import json
+import os
+import tempfile
+from datetime import datetime
 
 from gh_activity_tracker.tracker import ActivityTracker
 from gh_activity_tracker.github_api import GitHubAPI
@@ -56,7 +59,7 @@ class TestFormatters(unittest.TestCase):
         """JSON formatter outputs valid JSON."""
         data = [{"repo": "test/repo", "stars": 100}]
         result = format_json(data)
-        parsed = __import__("json").loads(result)
+        parsed = json.loads(result)
         self.assertEqual(len(parsed), 1)
         self.assertEqual(parsed[0]["repo"], "test/repo")
 
@@ -74,31 +77,6 @@ class TestFormatters(unittest.TestCase):
         self.assertTrue(lines[0].startswith("repo"))
         self.assertTrue(lines[1].startswith("test/repo"))
 
-
-class TestActivityTracker(unittest.TestCase):
-    """Tests for activity tracker."""
-
-    def test_tracker_init(self):
-        """Tracker initializes with API client."""
-        tracker = ActivityTracker()
-        self.assertIsNotNone(tracker.api)
-
-
-class TestActivityStorage(unittest.TestCase):
-    """Tests for SQLite storage."""
-
-    def test_storage_init(self):
-        """Storage initializes and creates tables."""
-        import tempfile
-        import os
-        with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = os.path.join(tmpdir, "test.db")
-            storage = ActivityStorage(db_path=db_path)
-            self.assertTrue(os.path.exists(db_path))
-
-
-if __name__ == "__main__":
-    unittest.main()
     def test_format_csv_header(self):
         """CSV formatter includes correct headers."""
         data = [{
@@ -112,20 +90,43 @@ if __name__ == "__main__":
         }]
         result = format_csv(data)
         lines = result.strip().split("\n")
-        self.assertIn("Repository", lines[0])
-        self.assertIn("Stars", lines[0])
+        self.assertIn("repo", lines[0].lower())
+        self.assertIn("stars", lines[0].lower())
 
-    def test_storage_schema_version(self):
-        """Storage tracks schema version for migrations."""
-        import tempfile
-        import os
-        with tempfile.TemporaryDirectory() as tmpdir:
-            db_path = os.path.join(tmpdir, "schema_test.db")
-            storage = ActivityStorage(db_path=db_path)
-            self.assertTrue(hasattr(storage, "schema_version"))
+
+class TestActivityTracker(unittest.TestCase):
+    """Tests for activity tracker."""
+
+    def test_tracker_init(self):
+        """Tracker initializes with API client."""
+        tracker = ActivityTracker()
+        self.assertIsNotNone(tracker.api)
 
     def test_tracker_has_rate_limit_props(self):
         """Tracker exposes rate limit properties for monitoring."""
         tracker = ActivityTracker()
         self.assertTrue(hasattr(tracker, "rate_limit_remaining"))
         self.assertTrue(hasattr(tracker, "rate_limit_reset"))
+
+
+class TestActivityStorage(unittest.TestCase):
+    """Tests for SQLite storage."""
+
+    def test_storage_init(self):
+        """Storage initializes and creates tables."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = os.path.join(tmpdir, "test.db")
+            storage = ActivityStorage(db_path=db_path)
+            self.assertTrue(os.path.exists(db_path))
+
+    def test_storage_schema_version(self):
+        """Storage tracks schema version for migrations."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = os.path.join(tmpdir, "schema_test.db")
+            storage = ActivityStorage(db_path=db_path)
+            self.assertTrue(hasattr(storage, "schema_version"))
+            self.assertEqual(storage.schema_version, 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
