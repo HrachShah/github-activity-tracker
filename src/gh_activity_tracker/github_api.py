@@ -79,12 +79,16 @@ class GitHubAPI:
         data = self.get(f"/repos/{repo}")
         return data.get("stargazers_count", 0) if data else 0
 
-    def get_activity_summary(self, repo: str, days: int = 30) -> dict[str, Any]:
-        """Get activity summary for a repository over N days."""
+    def get_activity_summary(self, repo: str, days: int = 30) -> dict[str, Any] | None:
+        """Get activity summary for a repository over N days.
+        
+        Returns None if the repository cannot be found, to distinguish
+        from a valid zero-activity response.
+        """
         since = datetime.now(timezone.utc) - timedelta(days=days)
         repo_data = self.get_repo(repo)
         if not repo_data:
-            return {}
+            return None
         commits = self.get_commits(repo, since=since)
         return {
             "repo": repo,
