@@ -23,7 +23,8 @@ class ActivityStorage:
 
     def _init_db(self) -> None:
         """Create tables if they don't exist."""
-        os.makedirs(os.path.dirname(self.db_path) or ".", exist_ok=True)
+        db_dir = os.path.dirname(os.path.expanduser(self.db_path)) or "."
+        os.makedirs(db_dir, exist_ok=True)
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
