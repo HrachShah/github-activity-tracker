@@ -3,6 +3,8 @@
 from typing import Any
 
 import json
+import csv
+import io
 
 
 def format_text(data: list[dict[str, Any]]) -> str:
@@ -32,16 +34,17 @@ def format_csv(data: list[dict[str, Any]]) -> str:
     if not data:
         return ""
     headers = ["repo", "stars", "forks", "open_issues", "commits_30d", "language", "last_updated"]
-    lines = [",".join(headers)]
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(headers)
     for item in data:
-        row = [
-            str(item.get("repo", "")),
-            str(item.get("stars", 0)),
-            str(item.get("forks", 0)),
-            str(item.get("open_issues", 0)),
-            str(item.get("commits_30d", 0)),
-            str(item.get("language", "")),
-            str(item.get("last_updated", "")),
-        ]
-        lines.append(",".join(row))
-    return "\n".join(lines)
+        writer.writerow([
+            item.get("repo", ""),
+            item.get("stars", 0),
+            item.get("forks", 0),
+            item.get("open_issues", 0),
+            item.get("commits_30d", 0),
+            item.get("language", ""),
+            item.get("last_updated", ""),
+        ])
+    return output.getvalue()
