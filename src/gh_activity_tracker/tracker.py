@@ -44,5 +44,9 @@ class ActivityTracker:
         return self.track_multiple(repos, days=days)
 
     def get_trending(self, language: str | None = None, days: int = 7, min_stars: int = 100) -> list[dict[str, Any]]:
-        """Get trending repositories (requires additional search logic)."""
-        return []
+        """Get trending repositories by star gain over the specified period."""
+        query = f"stars:>{min_stars} created:>{days}d"
+        if language:
+            query += f" language:{language}"
+        data = self.api.search_repos(query)
+        return data if isinstance(data, list) else []

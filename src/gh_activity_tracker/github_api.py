@@ -101,6 +101,32 @@ class GitHubAPI:
             "language": repo_data.get("language", ""),
         }
 
+    def search_repos(self, query: str, per_page: int = 30) -> list[dict[str, Any]]:
+        """Search GitHub repositories using the search API.
+        
+        Args:
+            query: GitHub search query string (e.g. "stars:>100 language:python")
+            per_page: Number of results per page (max 100)
+        Returns:
+            List of repository items from the search results.
+        """
+        params = {"q": query, "per_page": min(per_page, 100), "sort": "stars"}
+        data = self.get("/search/repositories", params=params)
+        if isinstance(data, dict) and "items" in data:
+            return [
+                {
+                    "repo": item.get("full_name", ""),
+                    "description": item.get("description", ""),
+                    "stars": item.get("stargazers_count", 0),
+                    "forks": item.get("forks_count", 0),
+                    "language": item.get("language", ""),
+                    "url": item.get("html_url", ""),
+                    "created_at": item.get("created_at", ""),
+                }
+                for item in data["items"]
+            ]
+        return []
+
 
 if __name__ == "__main__":
     api = GitHubAPI()
