@@ -2,7 +2,6 @@
 
 import argparse
 import sys
-from typing import Annotated
 
 from .formatters import format_csv, format_json, format_text
 from .storage import ActivityStorage
