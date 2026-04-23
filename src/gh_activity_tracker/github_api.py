@@ -39,6 +39,7 @@ class GitHubAPI:
     def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | None:
         """Make a GET request with retry and rate-limit handling."""
         url = f"{DEFAULT_API_URL}{endpoint}"
+        last_response: requests.Response | None = None
         for attempt in range(self.max_retries):
             self._handle_rate_limit()
             try:
@@ -49,9 +50,11 @@ class GitHubAPI:
                 if response.status_code == 404:
                     return None
                 if response.status_code == 403 and self.rate_limit_remaining == 0:
+                    last_response = response
                     continue
                 response.raise_for_status()
-            except requests.RequestException:
+                last_response = response
+            except requests.RequestException as e:
                 if attempt < self.max_retries - 1:
                     time.sleep(2 ** attempt)
                     continue
