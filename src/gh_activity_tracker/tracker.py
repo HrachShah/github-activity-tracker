@@ -22,8 +22,11 @@ class ActivityTracker:
         """Timestamp when rate limit resets."""
         return self.api.rate_limit_reset
 
-    def track_repo(self, repo: str, days: int = 30) -> dict[str, Any]:
-        """Track activity for a single repository."""
+    def track_repo(self, repo: str, days: int = 30) -> dict[str, Any] | None:
+        """Track activity for a single repository.
+
+        Returns None if the repository cannot be found.
+        """
         return self.api.get_activity_summary(repo, days=days)
 
     def track_multiple(self, repos: list[str], days: int = 30) -> list[dict[str, Any]]:
