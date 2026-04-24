@@ -98,6 +98,28 @@ class ActivityStorage:
             )
             conn.commit()
 
+    def dedup_tracked_repos(self) -> int:
+        """Remove duplicate tracked repos, keeping the oldest entry for each.
+
+        Returns:
+            The number of duplicate rows removed.
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                DELETE FROM tracked_repos
+                WHERE rowid NOT IN (
+                    SELECT MIN(rowid)
+                    FROM tracked_repos
+                    GROUP BY repo
+                )
+                """
+            )
+            removed = cursor.rowcount
+            conn.commit()
+            return removed
+
     def get_tracked_repos(self) -> list[str]:
         """Get all tracked repositories."""
         with sqlite3.connect(self.db_path) as conn:
