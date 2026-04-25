@@ -55,7 +55,6 @@ class GitHubAPI:
                 if attempt < self.max_retries - 1:
                     time.sleep(2 ** attempt)
                     continue
-                return None
         return None
 
     def get_repo(self, repo: str) -> dict[str, Any] | None:
