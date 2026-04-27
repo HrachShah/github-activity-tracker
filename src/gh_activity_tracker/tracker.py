@@ -38,11 +38,3 @@ class ActivityTracker:
                 print(f"Error tracking {repo}: {e}")
                 continue
         return results
-
-    def compare_repos(self, repos: list[str], days: int = 30) -> list[dict[str, Any]]:
-        """Compare activity across multiple repositories."""
-        return self.track_multiple(repos, days=days)
-
-    def get_trending(self, language: str | None = None, days: int = 7, min_stars: int = 100) -> list[dict[str, Any]]:
-        """Get trending repositories (requires additional search logic)."""
-        return []
