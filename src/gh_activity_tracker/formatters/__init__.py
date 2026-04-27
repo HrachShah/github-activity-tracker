@@ -47,4 +47,4 @@ def format_csv(data: list[dict[str, Any]]) -> str:
             item.get("language", ""),
             item.get("last_updated", ""),
         ])
-    return output.getvalue()
+    return output.getvalue() + "\n"
