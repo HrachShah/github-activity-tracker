@@ -130,6 +130,10 @@ class GitHubAPI:
             ]
         return []
 
+    def close(self) -> None:
+        """Close the underlying session and release resources."""
+        self.session.close()
+
 
 if __name__ == "__main__":
     api = GitHubAPI()
