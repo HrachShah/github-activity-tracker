@@ -42,18 +42,6 @@ class ActivityTracker:
                 continue
         return results
 
-    def compare_repos(self, repos: list[str], days: int = 30) -> list[dict[str, Any]]:
-        """Compare activity across multiple repositories.
-
-        Args:
-            repos: List of repository names in 'owner/repo' format.
-            days: Number of days of history to track per repo.
-
-        Returns:
-            List of activity dicts, excluding any repos that returned no data.
-        """
-        return self.track_multiple(repos, days=days)
-
     def get_trending(self, language: str | None = None, days: int = 7, min_stars: int = 100) -> list[dict[str, Any]]:
         """Get trending repositories by star gain over the specified period."""
         query = f"stars:>{min_stars} created:>{days}d"
