@@ -44,5 +44,46 @@ class ActivityTracker:
         return self.track_multiple(repos, days=days)
 
     def get_trending(self, language: str | None = None, days: int = 7, min_stars: int = 100) -> list[dict[str, Any]]:
-        """Get trending repositories (requires additional search logic)."""
-        return []
+        """Get trending repositories within the given number of days.
+        
+        Args:
+            language: Optional language filter (e.g. "python", "rust").
+            days: Number of days to look back for newly created repos.
+            min_stars: Minimum star count to include in results.
+            
+        Returns:
+            List of trending repository dicts with name, stars, language, etc.
+        """
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        date_str = since.strftime("%Y-%m-%d")
+        
+        query_parts = [f"created:>{date_str}", f"stars:>={min_stars}"]
+        if language:
+            query_parts.append(f"language:{language}")
+        query = " ".join(query_parts)
+        
+        params = {
+            "q": query,
+            "sort": "stars",
+            "order": "desc",
+            "per_page": 10,
+        }
+        
+        data = self.api.get("/search/repositories", params=params)
+        if not isinstance(data, dict):
+            return []
+        
+        items = data.get("items", [])
+        return [
+            {
+                "repo": item.get("full_name", ""),
+                "stars": item.get("stargazers_count", 0),
+                "forks": item.get("forks_count", 0),
+                "open_issues": item.get("open_issues_count", 0),
+                "description": item.get("description", ""),
+                "language": item.get("language", ""),
+                "created_at": item.get("created_at", ""),
+                "url": item.get("html_url", ""),
+            }
+            for item in items
+        ]
