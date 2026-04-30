@@ -44,5 +44,45 @@ class ActivityTracker:
         return self.track_multiple(repos, days=days)
 
     def get_trending(self, language: str | None = None, days: int = 7, min_stars: int = 100) -> list[dict[str, Any]]:
-        """Get trending repositories (requires additional search logic)."""
-        return []
+        """Get trending repositories based on star activity within the given window.
+        
+        Uses the GitHub Search API to find repositories created recently
+        and sorts by star count. Only repositories with at least `min_stars`
+        total stars are included.
+        
+        Args:
+            language: Optional programming language to filter by.
+            days: Number of days to look back for repository creation (default: 7).
+            min_stars: Minimum total star count (default: 100).
+            
+        Returns:
+            List of repository data dicts with stars, forks, and activity metrics.
+        """
+        params: dict[str, Any] = {
+            "q": f"created:>{days}d",
+            "sort": "stars",
+            "order": "desc",
+            "per_page": 30,
+        }
+        if language:
+            params["q"] += f" language:{language}"
+        
+        search_results = self.api.get("/search/repositories", params=params)
+        if not isinstance(search_results, dict) or "items" not in search_results:
+            return []
+        
+        results = []
+        for repo in search_results["items"][:10]:
+            if repo.get("stargazers_count", 0) < min_stars:
+                continue
+            results.append({
+                "repo": repo.get("full_name", ""),
+                "stars": repo.get("stargazers_count", 0),
+                "forks": repo.get("forks_count", 0),
+                "open_issues": repo.get("open_issues_count", 0),
+                "commits_30d": 0,
+                "last_updated": repo.get("pushed_at"),
+                "description": repo.get("description", ""),
+                "language": repo.get("language", ""),
+            })
+        return results
