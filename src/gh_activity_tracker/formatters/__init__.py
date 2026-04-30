@@ -31,7 +31,7 @@ def format_csv(data: list[dict[str, Any]]) -> str:
     """Format activity data as CSV."""
     if not data:
         return ""
-    headers = ["repo", "stars", "forks", "open_issues", "commits_30d", "language", "last_updated"]
+    headers = ["repo", "stars", "forks", "open_issues", "commits_30d", "language", "last_updated", "description"]
     lines = [",".join(headers)]
     for item in data:
         row = [
@@ -42,6 +42,7 @@ def format_csv(data: list[dict[str, Any]]) -> str:
             str(item.get("commits_30d", 0)),
             str(item.get("language", "")),
             str(item.get("last_updated", "")),
+            str(item.get("description", "")),
         ]
         lines.append(",".join(row))
     return "\n".join(lines)
