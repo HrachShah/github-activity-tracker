@@ -49,7 +49,6 @@ class ActivityTracker:
         Uses the GitHub Search API to find repositories created recently
         and sorts by star count. Only repositories with at least `min_stars`
         total stars are included.
-
         Args:
             language: Optional programming language to filter by.
             days: Number of days to look back for repository creation (default: 7).
@@ -71,16 +70,21 @@ class ActivityTracker:
         if not isinstance(search_results, dict) or "items" not in search_results:
             return []
 
+        since = datetime.now(timezone.utc) - timedelta(days=30)
         results = []
         for repo in search_results["items"][:10]:
             if repo.get("stargazers_count", 0) < min_stars:
                 continue
+            # Fetch real commit counts using the commits endpoint filtered by date
+            full_name = repo.get("full_name", "")
+            commit_data = self.api.get(f"/repos/{full_name}/commits", params={"since": since.isoformat(), "per_page": 100})
+            commits_30d = len(commit_data) if isinstance(commit_data, list) else 0
             results.append({
-                "repo": repo.get("full_name", ""),
+                "repo": full_name,
                 "stars": repo.get("stargazers_count", 0),
                 "forks": repo.get("forks_count", 0),
                 "open_issues": repo.get("open_issues_count", 0),
-                "commits_30d": 0,
+                "commits_30d": commits_30d,
                 "last_updated": repo.get("pushed_at"),
                 "description": repo.get("description", ""),
                 "language": repo.get("language", ""),
