@@ -34,7 +34,7 @@ class ActivityTracker:
                 activity = self.track_repo(repo, days=days)
                 if activity:
                     results.append(activity)
-            except Exception as e:
+            except (AttributeError, KeyError, RuntimeError) as e:
                 print(f"Error tracking {repo}: {e}")
                 continue
         return results
@@ -75,8 +75,10 @@ class ActivityTracker:
         for repo in search_results["items"][:10]:
             if repo.get("stargazers_count", 0) < min_stars:
                 continue
-            # Fetch real commit counts using the commits endpoint filtered by date
             full_name = repo.get("full_name", "")
+            if not full_name:
+                # malformed search result entry — skip
+                continue
             commit_data = self.api.get(f"/repos/{full_name}/commits", params={"since": since.isoformat(), "per_page": 100})
             commits_30d = len(commit_data) if isinstance(commit_data, list) else 0
             results.append({
