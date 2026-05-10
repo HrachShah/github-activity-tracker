@@ -34,7 +34,7 @@ class ActivityTracker:
                 activity = self.track_repo(repo, days=days)
                 if activity:
                     results.append(activity)
-            except Exception as e:
+            except (ValueError, TypeError, RuntimeError) as e:
                 print(f"Error tracking {repo}: {e}")
                 continue
         return results
