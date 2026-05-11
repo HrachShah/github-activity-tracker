@@ -67,7 +67,7 @@ class ActivityStorage:
                     activity.get("stars"),
                     activity.get("forks"),
                     activity.get("open_issues"),
-                    activity.get("commits_30d"),
+                    activity.get("commits"),
                     activity.get("language"),
                     activity.get("description"),
                     datetime.now(timezone.utc).isoformat(),
