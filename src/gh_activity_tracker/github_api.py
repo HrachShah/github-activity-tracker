@@ -45,7 +45,10 @@ class GitHubAPI:
                 response = self.session.get(url, params=params, timeout=30)
                 self._update_rate_limit(response)
                 if response.status_code == 200:
-                    return response.json()
+                    try:
+                        return response.json()
+                    except ValueError:
+                        return None
                 if response.status_code == 404:
                     return None
                 if response.status_code == 403 and self.rate_limit_remaining == 0:
