@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from .github_api import GitHubAPI
+import requests
 
 
 class ActivityTracker:
@@ -34,7 +35,7 @@ class ActivityTracker:
                 activity = self.track_repo(repo, days=days)
                 if activity:
                     results.append(activity)
-            except Exception as e:
+            except (requests.RequestException, ValueError, KeyError, TypeError, OSError) as e:
                 print(f"Error tracking {repo}: {e}")
                 continue
         return results
