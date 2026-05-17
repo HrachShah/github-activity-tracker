@@ -17,8 +17,11 @@ def cmd_track(args: argparse.Namespace) -> None:
     if args.input:
         with open(args.input, "r") as f:
             repos = [line.strip() for line in f if line.strip()]
-    else:
+    elif args.repos:
         repos = args.repos
+    else:
+        print("Error: specify repos directly or with --input", file=sys.stderr)
+        return 1
 
     results = tracker.track_multiple(repos, days=args.days)
     output = format_json(results) if args.format == "json" else format_csv(results) if args.format == "csv" else format_text(results)
