@@ -3,6 +3,7 @@
 from typing import Any
 
 import json
+from datetime import datetime
 
 
 def format_text(data: list[dict[str, Any]]) -> str:
@@ -23,8 +24,16 @@ def format_text(data: list[dict[str, Any]]) -> str:
 
 
 def format_json(data: list[dict[str, Any]]) -> str:
-    """Format activity data as JSON."""
-    return json.dumps(data, indent=2)
+    """Format activity data as JSON.
+    
+    datetime values are serialized as ISO 8601 strings since the raw
+    datetime objects are not JSON-serializable.
+    """
+    def default_serializer(o: Any) -> str:
+        if isinstance(o, datetime):
+            return o.isoformat()
+        raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+    return json.dumps(data, indent=2, default=default_serializer)
 
 
 def format_csv(data: list[dict[str, Any]]) -> str:
