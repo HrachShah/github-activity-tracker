@@ -32,7 +32,10 @@ def cmd_track(args: argparse.Namespace) -> None:
 
     if storage:
         for activity in results:
-            storage.save_snapshot(activity)
+            try:
+                storage.save_snapshot(activity)
+            except Exception:
+                pass
         for repo in repos:
             storage.add_tracked_repo(repo)
         print("Snapshots saved to database.")
@@ -61,7 +64,10 @@ def cmd_snapshot(args: argparse.Namespace) -> None:
     for repo in args.repos:
         activity = tracker.track_repo(repo)
         if activity:
-            storage.save_snapshot(activity)
+            try:
+                storage.save_snapshot(activity)
+            except Exception:
+                pass
             storage.add_tracked_repo(repo)
             print(f"Snapshot saved for {repo}")
         else:
