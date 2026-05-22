@@ -70,7 +70,7 @@ class ActivityStorage:
                     activity.get("commits_30d"),
                     activity.get("language"),
                     activity.get("description"),
-                    datetime.now(timezone.utc).isoformat(),
+                    activity.get("last_updated") or datetime.now(timezone.utc).isoformat(),
                 ),
             )
             conn.commit()
