@@ -35,7 +35,8 @@ class ActivityTracker:
                 if activity:
                     results.append(activity)
             except Exception as e:
-                print(f"Error tracking {repo}: {e}")
+                import sys
+                print(f"Error tracking {repo}: {e}", file=sys.stderr)
                 continue
         return results
 
