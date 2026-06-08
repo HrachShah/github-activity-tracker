@@ -2,6 +2,7 @@
 
 import os
 import time
+import json
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -52,6 +53,18 @@ class GitHubAPI:
                     continue
                 response.raise_for_status()
             except requests.RequestException:
+                if attempt < self.max_retries - 1:
+                    time.sleep(2 ** attempt)
+                    continue
+                return None
+            except (json.JSONDecodeError, ValueError):
+                # response.json() can raise json.JSONDecodeError when GitHub
+                # returns a 200 with an HTML error page (intermittent edge
+                # proxy) or a 200 with a truncated body (e.g. TLS-level
+                # disconnect mid-stream). requests.RequestException does not
+                # cover JSONDecodeError, so without this branch the retry
+                # loop would surface the parse error to the caller instead
+                # of treating it as a transient failure.
                 if attempt < self.max_retries - 1:
                     time.sleep(2 ** attempt)
                     continue
