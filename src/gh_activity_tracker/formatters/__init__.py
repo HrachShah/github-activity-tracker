@@ -24,7 +24,7 @@ def format_text(data: list[dict[str, Any]]) -> str:
 
 def format_json(data: list[dict[str, Any]]) -> str:
     """Format activity data as JSON."""
-    return json.dumps(data, indent=2)
+    return json.dumps(data, indent=2, default=str)
 
 
 def format_csv(data: list[dict[str, Any]]) -> str:

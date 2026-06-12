@@ -63,6 +63,21 @@ class TestFormatters(unittest.TestCase):
         self.assertEqual(len(parsed), 1)
         self.assertEqual(parsed[0]["repo"], "test/repo")
 
+    def test_format_json_handles_datetime_values(self):
+        """JSON formatter falls back to str() for non-JSON-native scalars like datetime and date, so a snapshot row with a real datetime or date value does not crash the whole --format json output."""
+        from datetime import date
+        data = [{
+            "repo": "test/repo",
+            "stars": 100,
+            "last_updated": datetime(2026, 4, 20, 12, 0, 0),
+            "snapshot_at": date(2026, 4, 20),
+        }]
+        result = format_json(data)
+        parsed = json.loads(result)
+        self.assertEqual(parsed[0]["repo"], "test/repo")
+        self.assertEqual(parsed[0]["last_updated"], "2026-04-20 12:00:00")
+        self.assertEqual(parsed[0]["snapshot_at"], "2026-04-20")
+
     def test_format_csv_empty(self):
         """CSV formatter handles empty data."""
         result = format_csv([])
