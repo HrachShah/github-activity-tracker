@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import csv
+import io
 import json
 
 
@@ -28,20 +30,28 @@ def format_json(data: list[dict[str, Any]]) -> str:
 
 
 def format_csv(data: list[dict[str, Any]]) -> str:
-    """Format activity data as CSV."""
+    """Format activity data as CSV.
+
+    Values are written via csv.writer so commas, double quotes, and newlines
+    in repo names, language strings, or last_updated timestamps are escaped
+    per RFC 4180 (quoted and quote-doubled) instead of being emitted raw,
+    which previously produced a row that csv.reader could not parse back
+    into the same number of columns.
+    """
     if not data:
         return ""
     headers = ["repo", "stars", "forks", "open_issues", "commits_30d", "language", "last_updated"]
-    lines = [",".join(headers)]
+    buf = io.StringIO()
+    writer = csv.writer(buf, lineterminator="\n")
+    writer.writerow(headers)
     for item in data:
-        row = [
-            str(item.get("repo", "")),
-            str(item.get("stars", 0)),
-            str(item.get("forks", 0)),
-            str(item.get("open_issues", 0)),
-            str(item.get("commits_30d", 0)),
-            str(item.get("language", "")),
-            str(item.get("last_updated", "")),
-        ]
-        lines.append(",".join(row))
-    return "\n".join(lines)
+        writer.writerow([
+            item.get("repo", ""),
+            item.get("stars", 0),
+            item.get("forks", 0),
+            item.get("open_issues", 0),
+            item.get("commits_30d", 0),
+            item.get("language", ""),
+            item.get("last_updated", ""),
+        ])
+    return buf.getvalue().rstrip("\n")

@@ -3,6 +3,8 @@
 import unittest
 import json
 import os
+import io
+import csv
 import tempfile
 from datetime import datetime
 
@@ -92,6 +94,60 @@ class TestFormatters(unittest.TestCase):
         lines = result.strip().split("\n")
         self.assertIn("repo", lines[0].lower())
         self.assertIn("stars", lines[0].lower())
+
+    def test_format_csv_escapes_commas(self):
+        """CSV formatter quotes repo names that contain a comma."""
+        data = [{
+            "repo": "weird,name",
+            "stars": 100,
+            "forks": 20,
+            "open_issues": 5,
+            "commits_30d": 42,
+            "language": "Python",
+            "last_updated": "2026-04-20T12:00:00Z",
+        }]
+        result = format_csv(data)
+        reader = csv.reader(io.StringIO(result))
+        rows = list(reader)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows[1]), 7)
+        self.assertEqual(rows[1][0], "weird,name")
+
+    def test_format_csv_escapes_quotes(self):
+        """CSV formatter doubles embedded double quotes in values."""
+        data = [{
+            "repo": "test/repo",
+            "stars": 100,
+            "forks": 20,
+            "open_issues": 5,
+            "commits_30d": 42,
+            "language": 'lang "with" quote',
+            "last_updated": "2026-04-20T12:00:00Z",
+        }]
+        result = format_csv(data)
+        reader = csv.reader(io.StringIO(result))
+        rows = list(reader)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows[1]), 7)
+        self.assertEqual(rows[1][5], 'lang "with" quote')
+
+    def test_format_csv_escapes_newlines(self):
+        """CSV formatter preserves newlines inside values."""
+        data = [{
+            "repo": "test/repo",
+            "stars": 100,
+            "forks": 20,
+            "open_issues": 5,
+            "commits_30d": 42,
+            "language": "line1\nline2",
+            "last_updated": "2026-04-20T12:00:00Z",
+        }]
+        result = format_csv(data)
+        reader = csv.reader(io.StringIO(result))
+        rows = list(reader)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows[1]), 7)
+        self.assertEqual(rows[1][5], "line1\nline2")
 
 
 class TestActivityTracker(unittest.TestCase):
