@@ -93,6 +93,83 @@ class TestFormatters(unittest.TestCase):
         self.assertIn("repo", lines[0].lower())
         self.assertIn("stars", lines[0].lower())
 
+    def test_format_csv_quotes_fields_with_commas(self):
+        """CSV formatter quotes fields that contain commas (e.g. 'Jupyter Notebook, Python')."""
+        import csv as _csv
+        import io as _io
+        data = [{
+            "repo": "a/b",
+            "stars": 1,
+            "forks": 2,
+            "open_issues": 3,
+            "commits_30d": 4,
+            "language": "Jupyter Notebook, Python",
+            "last_updated": "2025-01-01",
+        }]
+        result = format_csv(data)
+        rows = list(_csv.reader(_io.StringIO(result)))
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows[1]), 7)
+        self.assertEqual(rows[1][5], "Jupyter Notebook, Python")
+
+    def test_format_csv_quotes_repo_names_with_commas(self):
+        """CSV formatter quotes repo names that contain commas (typo or org with comma)."""
+        import csv as _csv
+        import io as _io
+        data = [{
+            "repo": "has,comma/c",
+            "stars": 5,
+            "forks": 0,
+            "open_issues": 0,
+            "commits_30d": 0,
+            "language": "C++",
+            "last_updated": "2025-01-01",
+        }]
+        result = format_csv(data)
+        rows = list(_csv.reader(_io.StringIO(result)))
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows[1]), 7)
+        self.assertEqual(rows[1][0], "has,comma/c")
+        self.assertEqual(rows[1][5], "C++")
+
+    def test_format_csv_escapes_double_quotes(self):
+        """CSV formatter escapes embedded double quotes per RFC 4180 ('a\"b' -> 'a\"\"b')."""
+        import csv as _csv
+        import io as _io
+        data = [{
+            "repo": 'has"quote/d',
+            "stars": 0,
+            "forks": 0,
+            "open_issues": 0,
+            "commits_30d": 0,
+            "language": "Go",
+            "last_updated": "2025-01-01",
+        }]
+        result = format_csv(data)
+        rows = list(_csv.reader(_io.StringIO(result)))
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows[1]), 7)
+        self.assertEqual(rows[1][0], 'has"quote/d')
+
+    def test_format_csv_handles_newlines_in_fields(self):
+        """CSV formatter quotes fields containing newlines (e.g. multi-line descriptions)."""
+        import csv as _csv
+        import io as _io
+        data = [{
+            "repo": "has\nnewline/e",
+            "stars": 0,
+            "forks": 0,
+            "open_issues": 0,
+            "commits_30d": 0,
+            "language": "Rust",
+            "last_updated": "2025-01-01",
+        }]
+        result = format_csv(data)
+        rows = list(_csv.reader(_io.StringIO(result)))
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows[1]), 7)
+        self.assertEqual(rows[1][0], "has\nnewline/e")
+
 
 class TestActivityTracker(unittest.TestCase):
     """Tests for activity tracker."""

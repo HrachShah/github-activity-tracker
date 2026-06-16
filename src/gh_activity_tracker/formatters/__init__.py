@@ -1,8 +1,9 @@
 """Output formatters for activity data."""
 
-from typing import Any
-
+import csv
+import io
 import json
+from typing import Any
 
 
 def format_text(data: list[dict[str, Any]]) -> str:
@@ -28,20 +29,28 @@ def format_json(data: list[dict[str, Any]]) -> str:
 
 
 def format_csv(data: list[dict[str, Any]]) -> str:
-    """Format activity data as CSV."""
+    """Format activity data as CSV.
+
+    Uses csv.writer with QUOTE_MINIMAL so fields containing commas, double
+    quotes, or newlines (e.g. a repo name with 'org,name' from a typo, a
+    'C++' or 'Jupyter Notebook, Python' language, or a description with
+    a newline) are properly escaped per RFC 4180 instead of corrupting
+    the row count and downstream parsers.
+    """
     if not data:
         return ""
     headers = ["repo", "stars", "forks", "open_issues", "commits_30d", "language", "last_updated"]
-    lines = [",".join(headers)]
+    buf = io.StringIO()
+    writer = csv.writer(buf, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+    writer.writerow(headers)
     for item in data:
-        row = [
-            str(item.get("repo", "")),
-            str(item.get("stars", 0)),
-            str(item.get("forks", 0)),
-            str(item.get("open_issues", 0)),
-            str(item.get("commits_30d", 0)),
-            str(item.get("language", "")),
-            str(item.get("last_updated", "")),
-        ]
-        lines.append(",".join(row))
-    return "\n".join(lines)
+        writer.writerow([
+            item.get("repo", ""),
+            item.get("stars", 0),
+            item.get("forks", 0),
+            item.get("open_issues", 0),
+            item.get("commits_30d", 0),
+            item.get("language", ""),
+            item.get("last_updated", ""),
+        ])
+    return buf.getvalue().rstrip("\n")
