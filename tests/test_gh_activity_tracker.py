@@ -25,6 +25,41 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_get_commits_paginates_beyond_first_page(self):
+        """get_commits should follow Link-header pagination, not just first page."""
+        from unittest.mock import MagicMock
+
+        api = GitHubAPI()
+        # Simulate a repo with 150 commits in the window: page 1 returns
+        # 100 commits, page 2 returns 50. The old code stopped at 100 and
+        # reported commits_30d=100 instead of 150.
+        page1 = [{"sha": f"s{i}"} for i in range(100)]
+        page2 = [{"sha": f"t{i}"} for i in range(50)]
+        session = MagicMock()
+        resp1 = MagicMock(status_code=200)
+        resp1.json.return_value = page1
+        resp1.headers = {
+            "X-RateLimit-Remaining": "5000",
+            "X-RateLimit-Reset": "0",
+            "Link": '<https://api.github.com/repositories/1/commits?page=2>; rel="next"',
+        }
+        resp2 = MagicMock(status_code=200)
+        resp2.json.return_value = page2
+        resp2.headers = {
+            "X-RateLimit-Remaining": "5000",
+            "X-RateLimit-Reset": "0",
+            "Link": "",
+        }
+        session.get.side_effect = [resp1, resp2]
+        api.session = session
+
+        commits = api.get_commits("owner/repo")
+        self.assertEqual(len(commits), 150, "should follow pagination past page 1")
+        self.assertEqual(session.get.call_count, 2)
+        # The second request should carry page=2 in the query params.
+        _, kwargs2 = session.get.call_args_list[1]
+        self.assertEqual(kwargs2["params"].get("page"), "2")
+
 
 class TestFormatters(unittest.TestCase):
     """Tests for output formatters."""
