@@ -32,9 +32,33 @@ class GitHubAPI:
             time.sleep(wait)
 
     def _update_rate_limit(self, response: requests.Response) -> None:
-        """Extract rate limit info from response headers."""
-        self.rate_limit_remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
-        self.rate_limit_reset = int(response.headers.get("X-RateLimit-Reset", "0"))
+        """Extract rate limit info from response headers.
+
+        Only update when the headers are actually present in the response.
+        GitHub does not include X-RateLimit-* on every response — for
+        example, some 4xx and 5xx error responses omit them, and a few
+        unauthenticated endpoints have always returned them inconsistently.
+        Defaulting missing headers to 5000/0 would silently make the client
+        think it has a full quota after every error response, defeating
+        the rate-limit-aware retry loop.
+
+        Tolerates malformed (non-numeric) values from upstream proxies so
+        a single bad header doesn't turn every API call into a stack trace.
+        """
+        if "X-RateLimit-Remaining" in response.headers:
+            try:
+                self.rate_limit_remaining = int(
+                    response.headers["X-RateLimit-Remaining"]
+                )
+            except ValueError:
+                pass
+        if "X-RateLimit-Reset" in response.headers:
+            try:
+                self.rate_limit_reset = int(
+                    response.headers["X-RateLimit-Reset"]
+                )
+            except ValueError:
+                pass
 
     def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | None:
         """Make a GET request with retry and rate-limit handling."""

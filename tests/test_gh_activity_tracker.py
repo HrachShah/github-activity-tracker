@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 from datetime import datetime
+from unittest.mock import MagicMock
 
 from gh_activity_tracker.tracker import ActivityTracker
 from gh_activity_tracker.github_api import GitHubAPI
@@ -24,6 +25,49 @@ class TestGitHubAPI(unittest.TestCase):
         """API should use provided token."""
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
+
+    def test_rate_limit_preserves_state_on_missing_headers(self):
+        """Missing X-RateLimit-* headers must not overwrite prior values.
+
+        GitHub does not include X-RateLimit-Remaining on every response —
+        some 4xx and 5xx error responses omit them, and a few
+        unauthenticated endpoints have always returned them inconsistently.
+        Defaulting missing headers to 5000/0 used to silently make the
+        client think it had a full quota after every error response,
+        defeating the rate-limit-aware retry loop.
+        """
+        api = GitHubAPI()
+        mock_response = MagicMock()
+        mock_response.headers = {}
+        api._update_rate_limit(mock_response)
+        self.assertIsNone(api.rate_limit_remaining)
+        self.assertIsNone(api.rate_limit_reset)
+
+    def test_rate_limit_updates_when_present(self):
+        """When headers are present, the values are stored as ints."""
+        api = GitHubAPI()
+        mock_response = MagicMock()
+        mock_response.headers = {
+            "X-RateLimit-Remaining": "100",
+            "X-RateLimit-Reset": "1700000000",
+        }
+        api._update_rate_limit(mock_response)
+        self.assertEqual(api.rate_limit_remaining, 100)
+        self.assertEqual(api.rate_limit_reset, 1700000000)
+
+    def test_rate_limit_tolerates_malformed_values(self):
+        """A non-numeric header value must not crash every API call.
+
+        A misbehaving proxy or upstream misconfiguration could deliver a
+        non-numeric value where GitHub would normally send an integer.
+        Previously this would raise ValueError out of int() and turn every
+        API request into a stack trace.
+        """
+        api = GitHubAPI()
+        mock_response = MagicMock()
+        mock_response.headers = {"X-RateLimit-Remaining": "not-a-number"}
+        api._update_rate_limit(mock_response)
+        self.assertIsNone(api.rate_limit_remaining)
 
 
 class TestFormatters(unittest.TestCase):
