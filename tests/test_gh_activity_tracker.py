@@ -93,6 +93,50 @@ class TestFormatters(unittest.TestCase):
         self.assertIn("repo", lines[0].lower())
         self.assertIn("stars", lines[0].lower())
 
+    def test_format_csv_includes_description(self):
+        """CSV formatter includes the description column that get_activity_summary returns."""
+        import csv as _csv
+        import io as _io
+        data = [{
+            "repo": "owner/name",
+            "stars": 100,
+            "forks": 20,
+            "open_issues": 5,
+            "commits_30d": 42,
+            "language": "Python",
+            "last_updated": "2026-04-20T12:00:00Z",
+            "description": "A real description that should appear in CSV output",
+        }]
+        result = format_csv(data)
+        reader = list(_csv.reader(_io.StringIO(result)))
+        headers = reader[0]
+        row = dict(zip(headers, reader[1]))
+        self.assertIn("description", headers)
+        self.assertEqual(row["description"], "A real description that should appear in CSV output")
+
+    def test_format_csv_escapes_commas_and_quotes(self):
+        """CSV formatter properly RFC-4180-quotes values that contain commas, double-quotes, or newlines."""
+        import csv as _csv
+        import io as _io
+        tricky = 'A description, with "quotes" and\nnewline'
+        data = [{
+            "repo": "owner/name",
+            "stars": 100,
+            "forks": 20,
+            "open_issues": 5,
+            "commits_30d": 42,
+            "language": "Python",
+            "last_updated": "2026-04-20T12:00:00Z",
+            "description": tricky,
+        }]
+        result = format_csv(data)
+        # Round-trip via csv.reader to confirm the output is parseable
+        # and the original description comes back byte-for-byte.
+        reader = list(_csv.reader(_io.StringIO(result)))
+        headers = reader[0]
+        row = dict(zip(headers, reader[1]))
+        self.assertEqual(row["description"], tricky)
+
 
 class TestActivityTracker(unittest.TestCase):
     """Tests for activity tracker."""
