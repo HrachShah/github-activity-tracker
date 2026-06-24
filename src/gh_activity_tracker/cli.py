@@ -86,7 +86,8 @@ def cmd_trend(args: argparse.Namespace) -> None:
     if snapshots:
         print(f"Activity trend for {args.repo} (last {len(snapshots)} snapshots):")
         for snap in reversed(snapshots):
-            print(f"  {snap['snapshot_at'][:10]} | stars={snap['stars']} | commits={snap['commits']}")
+            commits = snap.get("commits_30d", 0)
+            print(f"  {snap['snapshot_at'][:10]} | stars={snap['stars']} | commits={commits}")
     else:
         print(f"No snapshot data for {args.repo}. Run 'snapshot' command first.")
 
