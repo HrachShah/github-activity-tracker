@@ -70,12 +70,16 @@ class TestFormatters(unittest.TestCase):
 
     def test_format_csv_single_repo(self):
         """CSV formatter outputs valid CSV with headers."""
+        import csv
+        import io
+
         data = [{"repo": "test/repo", "stars": 100, "forks": 0, "open_issues": 0, "commits_30d": 0, "language": "", "last_updated": ""}]
         result = format_csv(data)
-        lines = result.split("\n")
-        self.assertEqual(len(lines), 2)
-        self.assertTrue(lines[0].startswith("repo"))
-        self.assertTrue(lines[1].startswith("test/repo"))
+        rows = list(csv.reader(io.StringIO(result)))
+        self.assertEqual(len(rows), 2, f"expected header + 1 data row, got {len(rows)} rows: {result!r}")
+        self.assertEqual(rows[0][0], "repo")
+        self.assertEqual(rows[1][0], "test/repo")
+        self.assertEqual(rows[1][1], "100")
 
     def test_format_csv_header(self):
         """CSV formatter includes correct headers."""
@@ -92,6 +96,39 @@ class TestFormatters(unittest.TestCase):
         lines = result.strip().split("\n")
         self.assertIn("repo", lines[0].lower())
         self.assertIn("stars", lines[0].lower())
+
+    def test_format_csv_quotes_field_containing_comma(self):
+        """A repo name with a comma must be quoted so it does not split into extra cells."""
+        import csv
+        import io
+
+        data = [{"repo": "owner/repo,with,commas", "stars": 100, "forks": 0, "open_issues": 0, "commits_30d": 0, "language": "Python", "last_updated": "2026-04-20"}]
+        result = format_csv(data)
+        rows = list(csv.reader(io.StringIO(result)))
+        self.assertEqual(len(rows), 2, f"expected header + 1 data row, got: {result!r}")
+        self.assertEqual(rows[1][0], "owner/repo,with,commas")
+        self.assertEqual(rows[1][5], "Python")
+
+    def test_format_csv_doubles_internal_quotes(self):
+        """A field containing a quote must double the quote so csv.reader restores it."""
+        import csv
+        import io
+
+        data = [{"repo": "owner/repo", "stars": 100, "forks": 0, "open_issues": 0, "commits_30d": 0, "language": 'Python "snake"', "last_updated": "2026-04-20"}]
+        result = format_csv(data)
+        rows = list(csv.reader(io.StringIO(result)))
+        self.assertEqual(rows[1][5], 'Python "snake"')
+
+    def test_format_csv_quotes_field_containing_newline(self):
+        """A field containing a newline must stay on one logical row, not split rows."""
+        import csv
+        import io
+
+        data = [{"repo": "owner/repo", "stars": 100, "forks": 0, "open_issues": 0, "commits_30d": 0, "language": "Python\nis\ngreat", "last_updated": "2026-04-20"}]
+        result = format_csv(data)
+        rows = list(csv.reader(io.StringIO(result)))
+        self.assertEqual(len(rows), 2, f"expected header + 1 data row, got {len(rows)} rows: {result!r}")
+        self.assertEqual(rows[1][5], "Python\nis\ngreat")
 
 
 class TestActivityTracker(unittest.TestCase):
