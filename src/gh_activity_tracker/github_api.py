@@ -36,7 +36,7 @@ class GitHubAPI:
         self.rate_limit_remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
         self.rate_limit_reset = int(response.headers.get("X-RateLimit-Reset", "0"))
 
-    def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | None:
+    def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | list[Any] | None:
         """Make a GET request with retry and rate-limit handling."""
         url = f"{DEFAULT_API_URL}{endpoint}"
         for attempt in range(self.max_retries):
