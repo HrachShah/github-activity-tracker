@@ -25,6 +25,18 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_activity_summary_names_commit_window_after_requested_days(self):
+        """The summary key must describe the requested history window."""
+        from unittest.mock import patch
+
+        api = GitHubAPI()
+        with patch.object(api, "get_repo", return_value={"stargazers_count": 1, "forks_count": 2, "open_issues_count": 3}), \
+             patch.object(api, "get_commits", return_value=[{}, {}]):
+            summary = api.get_activity_summary("owner/repo", days=7)
+
+        self.assertEqual(summary["commits_7d"], 2)
+        self.assertNotIn("commits_30d", summary)
+
     def test_malformed_rate_limit_headers_do_not_abort_response_handling(self):
         """Non-numeric proxy headers should leave rate-limit values unknown."""
         from unittest.mock import Mock

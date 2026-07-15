@@ -101,7 +101,7 @@ class GitHubAPI:
             "stars": repo_data.get("stargazers_count", 0),
             "forks": repo_data.get("forks_count", 0),
             "open_issues": repo_data.get("open_issues_count", 0),
-            "commits_30d": len(commits),
+            f"commits_{days}d": len(commits),
             "last_updated": repo_data.get("pushed_at"),
             "description": repo_data.get("description", ""),
             "language": repo_data.get("language", ""),
