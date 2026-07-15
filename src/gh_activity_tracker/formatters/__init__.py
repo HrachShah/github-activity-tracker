@@ -1,8 +1,9 @@
 """Output formatters for activity data."""
 
-from typing import Any
-
+import csv
+import io
 import json
+from typing import Any
 
 
 def format_text(data: list[dict[str, Any]]) -> str:
@@ -32,16 +33,9 @@ def format_csv(data: list[dict[str, Any]]) -> str:
     if not data:
         return ""
     headers = ["repo", "stars", "forks", "open_issues", "commits_30d", "language", "last_updated"]
-    lines = [",".join(headers)]
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=headers)
+    writer.writeheader()
     for item in data:
-        row = [
-            str(item.get("repo", "")),
-            str(item.get("stars", 0)),
-            str(item.get("forks", 0)),
-            str(item.get("open_issues", 0)),
-            str(item.get("commits_30d", 0)),
-            str(item.get("language", "")),
-            str(item.get("last_updated", "")),
-        ]
-        lines.append(",".join(row))
-    return "\n".join(lines)
+        writer.writerow(item)
+    return output.getvalue()
