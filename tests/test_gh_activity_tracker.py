@@ -25,6 +25,20 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_malformed_rate_limit_headers_do_not_abort_response_handling(self):
+        """Non-numeric proxy headers should leave rate-limit values unknown."""
+        from unittest.mock import Mock
+
+        api = GitHubAPI()
+        response = Mock()
+        response.headers = {
+            "X-RateLimit-Remaining": "unknown",
+            "X-RateLimit-Reset": None,
+        }
+        api._update_rate_limit(response)
+        self.assertIsNone(api.rate_limit_remaining)
+        self.assertIsNone(api.rate_limit_reset)
+
 
 class TestFormatters(unittest.TestCase):
     """Tests for output formatters."""
