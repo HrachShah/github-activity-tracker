@@ -33,10 +33,13 @@ def format_csv(data: list[dict[str, Any]]) -> str:
     """Format activity data as CSV."""
     if not data:
         return ""
-    commit_key = next((key for key in data[0] if key.startswith("commits_")), "commits_30d")
+    commit_key = next(
+        (key for item in data for key in item if key.startswith("commits_")),
+        "commits_30d",
+    )
     headers = ["repo", "stars", "forks", "open_issues", commit_key, "language", "last_updated"]
     output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=headers)
+    writer = csv.DictWriter(output, fieldnames=headers, extrasaction="ignore")
     writer.writeheader()
     for item in data:
         writer.writerow(item)

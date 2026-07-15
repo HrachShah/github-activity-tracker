@@ -2,6 +2,8 @@
 
 import unittest
 import json
+import csv
+import io
 import os
 import tempfile
 from datetime import datetime
@@ -106,6 +108,16 @@ class TestFormatters(unittest.TestCase):
         self.assertEqual(rows[0][0], "repo")
         self.assertEqual(rows[1][0], "test/repo")
         self.assertEqual(rows[1][1], "100")
+
+    def test_format_csv_uses_commit_window_from_later_row(self):
+        """CSV output keeps the commit column when the first row lacks it."""
+        data = [
+            {"repo": "first/repo", "stars": 1},
+            {"repo": "second/repo", "commits_7d": 3},
+        ]
+        rows = list(csv.reader(io.StringIO(format_csv(data))))
+        self.assertIn("commits_7d", rows[0])
+        self.assertEqual(rows[2][4], "3")
 
     def test_format_csv_header(self):
         """CSV formatter includes correct headers."""
