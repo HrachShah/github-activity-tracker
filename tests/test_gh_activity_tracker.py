@@ -130,3 +130,10 @@ class TestActivityStorage(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class TestCsvEscaping(unittest.TestCase):
+    def test_format_csv_quotes_values_containing_commas(self):
+        data = [{"repo": "owner/repo", "stars": 1, "forks": 0, "open_issues": 0, "commits_30d": 0, "language": "C, C++", "last_updated": ""}]
+        result = format_csv(data)
+        self.assertIn('"C, C++"', result)
+        self.assertEqual(len(result.splitlines()), 2)
