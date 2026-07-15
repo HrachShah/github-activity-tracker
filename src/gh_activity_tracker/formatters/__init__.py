@@ -42,5 +42,6 @@ def format_csv(data: list[dict[str, Any]]) -> str:
     writer = csv.DictWriter(output, fieldnames=headers, extrasaction="ignore")
     writer.writeheader()
     for item in data:
-        writer.writerow(item)
+        row = {header: item.get(header, "") for header in headers}
+        writer.writerow(row)
     return output.getvalue()

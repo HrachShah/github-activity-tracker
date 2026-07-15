@@ -119,6 +119,14 @@ class TestFormatters(unittest.TestCase):
         self.assertIn("commits_7d", rows[0])
         self.assertEqual(rows[2][4], "3")
 
+    def test_format_csv_fills_missing_fields_with_empty_values(self):
+        """Rows without optional metrics should still have all CSV columns."""
+        data = [{"repo": "owner/repo"}]
+        rows = list(csv.reader(io.StringIO(format_csv(data))))
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows[0]), len(rows[1]))
+        self.assertEqual(rows[1], ["owner/repo", "", "", "", "", "", ""])
+
     def test_format_csv_header(self):
         """CSV formatter includes correct headers."""
         data = [{
