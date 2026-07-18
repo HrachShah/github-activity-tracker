@@ -98,7 +98,7 @@ class GitHubAPI:
 
         since = datetime.now(timezone.utc) - timedelta(days=days)
         repo_data = self.get_repo(repo)
-        if not repo_data:
+        if not isinstance(repo_data, dict):
             return None
         commits = self.get_commits(repo, since=since)
         return {

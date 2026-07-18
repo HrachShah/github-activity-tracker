@@ -47,6 +47,14 @@ class TestGitHubAPI(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "days must be at least 1"):
             api.get_activity_summary("owner/repo", days=0)
 
+    def test_activity_summary_ignores_non_object_repository_payloads(self):
+        """A scalar or list repository response should behave like a missing repo."""
+        api = GitHubAPI()
+        with patch.object(api, "get_repo", return_value=[]), \
+             patch.object(api, "get_commits") as get_commits:
+            self.assertIsNone(api.get_activity_summary("owner/repo"))
+        get_commits.assert_not_called()
+
     def test_malformed_rate_limit_headers_do_not_abort_response_handling(self):
         """Non-numeric proxy headers should leave rate-limit values unknown."""
         from unittest.mock import Mock
