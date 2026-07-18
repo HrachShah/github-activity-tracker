@@ -33,10 +33,18 @@ class GitHubAPI:
 
     def _update_rate_limit(self, response: requests.Response) -> None:
         """Extract rate limit info from response headers."""
-        self.rate_limit_remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
-        self.rate_limit_reset = int(response.headers.get("X-RateLimit-Reset", "0"))
+        try:
+            remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
+            self.rate_limit_remaining = max(0, remaining)
+        except (TypeError, ValueError):
+            self.rate_limit_remaining = None
+        try:
+            reset = int(response.headers.get("X-RateLimit-Reset", "0"))
+            self.rate_limit_reset = max(0, reset)
+        except (TypeError, ValueError):
+            self.rate_limit_reset = None
 
-    def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | None:
+    def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | list[Any] | None:
         """Make a GET request with retry and rate-limit handling."""
         url = f"{DEFAULT_API_URL}{endpoint}"
         for attempt in range(self.max_retries):
@@ -81,13 +89,16 @@ class GitHubAPI:
 
     def get_activity_summary(self, repo: str, days: int = 30) -> dict[str, Any] | None:
         """Get activity summary for a repository over N days.
-        
+
         Returns None if the repository cannot be found, to distinguish
         from a valid zero-activity response.
         """
+        if days < 1:
+            raise ValueError("days must be at least 1")
+
         since = datetime.now(timezone.utc) - timedelta(days=days)
         repo_data = self.get_repo(repo)
-        if not repo_data:
+        if not isinstance(repo_data, dict):
             return None
         commits = self.get_commits(repo, since=since)
         return {
@@ -95,7 +106,7 @@ class GitHubAPI:
             "stars": repo_data.get("stargazers_count", 0),
             "forks": repo_data.get("forks_count", 0),
             "open_issues": repo_data.get("open_issues_count", 0),
-            "commits_30d": len(commits),
+            f"commits_{days}d": len(commits),
             "last_updated": repo_data.get("pushed_at"),
             "description": repo_data.get("description", ""),
             "language": repo_data.get("language", ""),
