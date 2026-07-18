@@ -87,10 +87,13 @@ class GitHubAPI:
 
     def get_activity_summary(self, repo: str, days: int = 30) -> dict[str, Any] | None:
         """Get activity summary for a repository over N days.
-        
+
         Returns None if the repository cannot be found, to distinguish
         from a valid zero-activity response.
         """
+        if days < 1:
+            raise ValueError("days must be at least 1")
+
         since = datetime.now(timezone.utc) - timedelta(days=days)
         repo_data = self.get_repo(repo)
         if not repo_data:

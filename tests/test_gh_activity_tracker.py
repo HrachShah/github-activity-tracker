@@ -39,6 +39,12 @@ class TestGitHubAPI(unittest.TestCase):
         self.assertEqual(summary["commits_7d"], 2)
         self.assertNotIn("commits_30d", summary)
 
+    def test_activity_summary_rejects_non_positive_history_window(self):
+        """A non-positive window must not query commits from the future."""
+        api = GitHubAPI()
+        with self.assertRaisesRegex(ValueError, "days must be at least 1"):
+            api.get_activity_summary("owner/repo", days=0)
+
     def test_malformed_rate_limit_headers_do_not_abort_response_handling(self):
         """Non-numeric proxy headers should leave rate-limit values unknown."""
         from unittest.mock import Mock
