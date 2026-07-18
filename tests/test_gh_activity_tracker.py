@@ -7,11 +7,13 @@ import io
 import os
 import tempfile
 from datetime import datetime
+from pathlib import Path
 
 from gh_activity_tracker.tracker import ActivityTracker
 from gh_activity_tracker.github_api import GitHubAPI
 from gh_activity_tracker.formatters import format_text, format_json, format_csv
 from gh_activity_tracker.storage import ActivityStorage
+from unittest.mock import patch
 
 
 class TestGitHubAPI(unittest.TestCase):
@@ -195,6 +197,23 @@ class TestFormatters(unittest.TestCase):
         rows = list(csv.reader(io.StringIO(result)))
         self.assertEqual(len(rows), 2, f"expected header + 1 data row, got {len(rows)} rows: {result!r}")
         self.assertEqual(rows[1][5], "Python\nis\ngreat")
+
+
+class TestCLIFileEncoding(unittest.TestCase):
+    def test_input_file_is_read_as_utf8(self):
+        from gh_activity_tracker import cli
+        import argparse
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "repos.txt"
+            path.write_text("owner/répo\n", encoding="utf-8")
+            args = argparse.Namespace(
+                token=None, save=False, input=str(path), repos=[], days=1,
+                format="json", output=None,
+            )
+            with patch.object(cli.ActivityTracker, "track_multiple", return_value=[]) as track:
+                cli.cmd_track(args)
+            track.assert_called_once_with(["owner/répo"], days=1)
 
 
 class TestActivityTracker(unittest.TestCase):
