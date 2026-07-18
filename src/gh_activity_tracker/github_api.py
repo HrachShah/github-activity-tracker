@@ -34,11 +34,13 @@ class GitHubAPI:
     def _update_rate_limit(self, response: requests.Response) -> None:
         """Extract rate limit info from response headers."""
         try:
-            self.rate_limit_remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
+            remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
+            self.rate_limit_remaining = max(0, remaining)
         except (TypeError, ValueError):
             self.rate_limit_remaining = None
         try:
-            self.rate_limit_reset = int(response.headers.get("X-RateLimit-Reset", "0"))
+            reset = int(response.headers.get("X-RateLimit-Reset", "0"))
+            self.rate_limit_reset = max(0, reset)
         except (TypeError, ValueError):
             self.rate_limit_reset = None
 

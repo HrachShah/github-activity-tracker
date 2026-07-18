@@ -59,6 +59,20 @@ class TestGitHubAPI(unittest.TestCase):
         self.assertIsNone(api.rate_limit_remaining)
         self.assertIsNone(api.rate_limit_reset)
 
+    def test_negative_rate_limit_headers_are_not_treated_as_exhausted(self):
+        """Negative headers should not trigger an unnecessary rate-limit wait."""
+        from unittest.mock import Mock
+
+        api = GitHubAPI()
+        response = Mock()
+        response.headers = {
+            "X-RateLimit-Remaining": "-1",
+            "X-RateLimit-Reset": "-1",
+        }
+        api._update_rate_limit(response)
+        self.assertEqual(api.rate_limit_remaining, 0)
+        self.assertEqual(api.rate_limit_reset, 0)
+
 
 class TestFormatters(unittest.TestCase):
     """Tests for output formatters."""
