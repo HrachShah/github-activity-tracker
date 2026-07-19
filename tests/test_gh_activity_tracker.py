@@ -108,6 +108,12 @@ class TestActivityTracker(unittest.TestCase):
         self.assertTrue(hasattr(tracker, "rate_limit_remaining"))
         self.assertTrue(hasattr(tracker, "rate_limit_reset"))
 
+    def test_negative_days_are_rejected(self):
+        """A history window cannot extend into the future."""
+        api = GitHubAPI()
+        with self.assertRaises(ValueError):
+            api.get_activity_summary("test/repo", days=-1)
+
 
 class TestActivityStorage(unittest.TestCase):
     """Tests for SQLite storage."""
