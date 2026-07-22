@@ -119,6 +119,13 @@ class TestActivityStorage(unittest.TestCase):
             storage = ActivityStorage(db_path=db_path)
             self.assertTrue(os.path.exists(db_path))
 
+    def test_get_snapshots_rejects_non_positive_limits(self):
+        """A non-positive limit must not turn into an unlimited SQL query."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            storage = ActivityStorage(db_path=os.path.join(tmpdir, "limit_test.db"))
+            with self.assertRaisesRegex(ValueError, "limit must be at least 1"):
+                storage.get_snapshots("owner/repo", limit=0)
+
     def test_storage_schema_version(self):
         """Storage tracks schema version for migrations."""
         with tempfile.TemporaryDirectory() as tmpdir:
