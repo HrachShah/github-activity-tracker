@@ -137,3 +137,11 @@ class TestActivityStorage(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class TestCSVFormattingEscaping(unittest.TestCase):
+    def test_format_csv_quotes_values_containing_commas(self):
+        result = format_csv([{"repo": "owner/repo", "language": "C, C++"}])
+        self.assertEqual(
+            result.splitlines()[1],
+            'owner/repo,0,0,0,0,"C, C++",',
+        )
