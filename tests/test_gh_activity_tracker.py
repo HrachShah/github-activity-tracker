@@ -114,6 +114,13 @@ class TestActivityTracker(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "days must be non-negative"):
             api.get_activity_summary("owner/repo", days=-1)
 
+    def test_track_multiple_preserves_unexpected_programming_errors(self):
+        """Unexpected programming errors should not be hidden as repository failures."""
+        tracker = ActivityTracker()
+        tracker.track_repo = lambda repo, days=30: 1 / 0
+        with self.assertRaises(ZeroDivisionError):
+            tracker.track_multiple(["owner/repo"])
+
 
 class TestActivityStorage(unittest.TestCase):
     """Tests for SQLite storage."""
