@@ -14,6 +14,8 @@ class GitHubAPI:
     """GitHub API client with rate-limit awareness."""
 
     def __init__(self, token: str | None = None, max_retries: int = 3):
+        if isinstance(max_retries, bool) or max_retries < 1:
+            raise ValueError("max_retries must be a positive integer")
         self.token = token or os.environ.get("GITHUB_TOKEN")
         self.max_retries = max_retries
         self.session = requests.Session()

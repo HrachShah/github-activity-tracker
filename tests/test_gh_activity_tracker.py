@@ -25,6 +25,12 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_api_rejects_non_positive_retry_count(self):
+        with self.assertRaisesRegex(ValueError, "max_retries must be a positive integer"):
+            GitHubAPI(max_retries=0)
+        with self.assertRaisesRegex(ValueError, "max_retries must be a positive integer"):
+            GitHubAPI(max_retries=False)
+
     def test_invalid_rate_limit_headers_do_not_abort_response_handling(self):
         api = GitHubAPI()
         response = type("Response", (), {"headers": {
