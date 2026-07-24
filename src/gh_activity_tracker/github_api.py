@@ -14,6 +14,8 @@ class GitHubAPI:
     """GitHub API client with rate-limit awareness."""
 
     def __init__(self, token: str | None = None, max_retries: int = 3):
+        if isinstance(max_retries, bool) or not isinstance(max_retries, int) or max_retries < 1:
+            raise ValueError("max_retries must be a positive integer")
         self.token = token or os.environ.get("GITHUB_TOKEN")
         self.max_retries = max_retries
         self.session = requests.Session()
@@ -33,8 +35,16 @@ class GitHubAPI:
 
     def _update_rate_limit(self, response: requests.Response) -> None:
         """Extract rate limit info from response headers."""
-        self.rate_limit_remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
-        self.rate_limit_reset = int(response.headers.get("X-RateLimit-Reset", "0"))
+        remaining = response.headers.get("X-RateLimit-Remaining")
+        reset = response.headers.get("X-RateLimit-Reset")
+        try:
+            self.rate_limit_remaining = int(remaining) if remaining is not None else 5000
+        except (TypeError, ValueError):
+            self.rate_limit_remaining = None
+        try:
+            self.rate_limit_reset = int(reset) if reset is not None else 0
+        except (TypeError, ValueError):
+            self.rate_limit_reset = None
 
     def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | None:
         """Make a GET request with retry and rate-limit handling."""

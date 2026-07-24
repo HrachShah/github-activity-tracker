@@ -25,6 +25,23 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_api_rejects_invalid_retry_count(self):
+        for value in (0, False, 1.5, "3"):
+            with self.subTest(value=value), self.assertRaisesRegex(
+                ValueError, "max_retries must be a positive integer"
+            ):
+                GitHubAPI(max_retries=value)
+
+    def test_invalid_rate_limit_headers_do_not_abort_response_handling(self):
+        api = GitHubAPI()
+        response = type("Response", (), {"headers": {
+            "X-RateLimit-Remaining": "not-a-number",
+            "X-RateLimit-Reset": "also-not-a-number",
+        }})()
+        api._update_rate_limit(response)
+        self.assertIsNone(api.rate_limit_remaining)
+        self.assertIsNone(api.rate_limit_reset)
+
 
 class TestFormatters(unittest.TestCase):
     """Tests for output formatters."""
