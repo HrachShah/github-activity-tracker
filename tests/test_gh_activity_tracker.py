@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 from datetime import datetime
+import unittest.mock
 
 from gh_activity_tracker.tracker import ActivityTracker
 from gh_activity_tracker.github_api import GitHubAPI
@@ -24,6 +25,18 @@ class TestGitHubAPI(unittest.TestCase):
         """API should use provided token."""
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
+
+    def test_malformed_rate_limit_headers_are_ignored(self):
+        """Invalid rate-limit headers should not abort response handling."""
+        api = GitHubAPI()
+        response = unittest.mock.Mock()
+        response.headers = {
+            "X-RateLimit-Remaining": "not-a-number",
+            "X-RateLimit-Reset": None,
+        }
+        api._update_rate_limit(response)
+        self.assertIsNone(api.rate_limit_remaining)
+        self.assertIsNone(api.rate_limit_reset)
 
 
 class TestFormatters(unittest.TestCase):
