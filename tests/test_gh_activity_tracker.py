@@ -90,6 +90,14 @@ class TestFormatters(unittest.TestCase):
         self.assertTrue(lines[0].startswith("repo"))
         self.assertTrue(lines[1].startswith("test/repo"))
 
+    def test_format_csv_quotes_values_containing_commas(self):
+        data = [{"repo": "team/project", "language": "C, C++", "last_updated": ""}]
+
+        result = format_csv(data)
+
+        self.assertIn('"C, C++"', result)
+        self.assertEqual(len(result.splitlines()), 2)
+
     def test_format_csv_header(self):
         """CSV formatter includes correct headers."""
         data = [{
