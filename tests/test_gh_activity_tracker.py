@@ -102,6 +102,12 @@ class TestActivityTracker(unittest.TestCase):
         tracker = ActivityTracker()
         self.assertIsNotNone(tracker.api)
 
+    def test_activity_summary_rejects_negative_history_window(self):
+        """A negative history window must not query a future date range."""
+        api = GitHubAPI()
+        with self.assertRaisesRegex(ValueError, "days must be non-negative"):
+            api.get_activity_summary("owner/repo", days=-1)
+
     def test_tracker_has_rate_limit_props(self):
         """Tracker exposes rate limit properties for monitoring."""
         tracker = ActivityTracker()
