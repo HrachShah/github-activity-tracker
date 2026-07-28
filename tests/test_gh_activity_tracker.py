@@ -86,6 +86,13 @@ class TestFormatters(unittest.TestCase):
         self.assertEqual(len(lines), 2)
         self.assertTrue(lines[0].startswith("repo"))
         self.assertTrue(lines[1].startswith("test/repo"))
+    def test_format_csv_quotes_values_containing_commas(self):
+        """CSV formatter preserves commas inside text fields."""
+        data = [{"repo": "test/repo", "stars": 100, "forks": 0, "open_issues": 0, "commits_30d": 0, "language": "C, C++", "last_updated": ""}]
+
+        result = format_csv(data)
+
+        self.assertIn('"C, C++"', result)
 
     def test_format_csv_header(self):
         """CSV formatter includes correct headers."""
