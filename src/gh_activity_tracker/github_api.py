@@ -89,6 +89,8 @@ class GitHubAPI:
         Returns None if the repository cannot be found, to distinguish
         from a valid zero-activity response.
         """
+        if isinstance(days, bool) or not isinstance(days, int):
+            raise TypeError("days must be an integer")
         if days < 0:
             raise ValueError("days must be non-negative")
         since = datetime.now(timezone.utc) - timedelta(days=days)

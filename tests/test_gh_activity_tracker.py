@@ -125,6 +125,14 @@ class TestActivityTracker(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "days must be non-negative"):
             api.get_activity_summary("owner/repo", days=-1)
 
+    def test_activity_summary_rejects_non_integer_history_window(self):
+        """A fractional or boolean history window must not reach timedelta."""
+        api = GitHubAPI()
+        for days in (1.5, True):
+            with self.subTest(days=days):
+                with self.assertRaisesRegex(TypeError, "days must be an integer"):
+                    api.get_activity_summary("owner/repo", days=days)
+
     def test_tracker_has_rate_limit_props(self):
         """Tracker exposes rate limit properties for monitoring."""
         tracker = ActivityTracker()
