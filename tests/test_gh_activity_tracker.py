@@ -158,6 +158,15 @@ class TestActivityStorage(unittest.TestCase):
             self.assertTrue(hasattr(storage, "schema_version"))
             self.assertEqual(storage.schema_version, 1)
 
+    def test_get_snapshots_rejects_invalid_limits(self):
+        """Snapshot queries must not accept negative or boolean limits."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            storage = ActivityStorage(db_path=os.path.join(tmpdir, "limits.db"))
+            for limit, error in ((-1, ValueError), (True, TypeError), (1.5, TypeError)):
+                with self.subTest(limit=limit):
+                    with self.assertRaises(error):
+                        storage.get_snapshots("owner/repo", limit=limit)
+
 
 if __name__ == "__main__":
     unittest.main()

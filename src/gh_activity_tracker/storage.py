@@ -77,6 +77,10 @@ class ActivityStorage:
 
     def get_snapshots(self, repo: str, limit: int = 30) -> list[dict[str, Any]]:
         """Get historical snapshots for a repository."""
+        if isinstance(limit, bool) or not isinstance(limit, int):
+            raise TypeError("limit must be an integer")
+        if limit < 0:
+            raise ValueError("limit must be non-negative")
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
