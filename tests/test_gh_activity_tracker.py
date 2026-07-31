@@ -15,6 +15,17 @@ from gh_activity_tracker.storage import ActivityStorage
 class TestGitHubAPI(unittest.TestCase):
     """Tests for GitHub API client."""
 
+    def test_get_rejects_non_object_success_payload(self):
+        api = GitHubAPI()
+        api.session.get = lambda *args, **kwargs: type("Response", (), {
+            "status_code": 200,
+            "headers": {},
+            "json": lambda self: ["unexpected", "list"],
+            "raise_for_status": lambda self: None,
+        })()
+
+        self.assertIsNone(api.get("/repos/example/project"))
+
     def test_api_init_without_token(self):
         """API should initialize without a token."""
         api = GitHubAPI()
