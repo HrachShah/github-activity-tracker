@@ -32,9 +32,17 @@ class GitHubAPI:
             time.sleep(wait)
 
     def _update_rate_limit(self, response: requests.Response) -> None:
-        """Extract rate limit info from response headers."""
-        self.rate_limit_remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
-        self.rate_limit_reset = int(response.headers.get("X-RateLimit-Reset", "0"))
+        """Extract valid rate limit info from response headers."""
+        remaining = response.headers.get("X-RateLimit-Remaining")
+        reset = response.headers.get("X-RateLimit-Reset")
+        try:
+            self.rate_limit_remaining = int(remaining) if remaining is not None else 5000
+        except (TypeError, ValueError):
+            self.rate_limit_remaining = 5000
+        try:
+            self.rate_limit_reset = int(reset) if reset is not None else 0
+        except (TypeError, ValueError):
+            self.rate_limit_reset = 0
 
     def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | None:
         """Make a GET request with retry and rate-limit handling."""

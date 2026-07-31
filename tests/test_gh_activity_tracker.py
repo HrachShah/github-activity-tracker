@@ -15,6 +15,20 @@ from gh_activity_tracker.storage import ActivityStorage
 class TestGitHubAPI(unittest.TestCase):
     """Tests for GitHub API client."""
 
+    def test_malformed_rate_limit_headers_use_safe_defaults(self):
+        api = GitHubAPI()
+        response = type("Response", (), {
+            "headers": {
+                "X-RateLimit-Remaining": "not-a-number",
+                "X-RateLimit-Reset": "also-invalid",
+            }
+        })()
+
+        api._update_rate_limit(response)
+
+        self.assertEqual(api.rate_limit_remaining, 5000)
+        self.assertEqual(api.rate_limit_reset, 0)
+
     def test_api_init_without_token(self):
         """API should initialize without a token."""
         api = GitHubAPI()
