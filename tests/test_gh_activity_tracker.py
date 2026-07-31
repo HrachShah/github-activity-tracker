@@ -15,6 +15,12 @@ from gh_activity_tracker.storage import ActivityStorage
 class TestGitHubAPI(unittest.TestCase):
     """Tests for GitHub API client."""
 
+    def test_activity_summary_rejects_nonobject_repository_response(self):
+        api = GitHubAPI()
+        api.get_repo = lambda repo: []
+
+        self.assertIsNone(api.get_activity_summary("test/repo"))
+
     def test_api_init_without_token(self):
         """API should initialize without a token."""
         api = GitHubAPI()
