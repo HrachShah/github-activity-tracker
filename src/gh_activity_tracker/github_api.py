@@ -45,7 +45,10 @@ class GitHubAPI:
                 response = self.session.get(url, params=params, timeout=30)
                 self._update_rate_limit(response)
                 if response.status_code == 200:
-                    payload = response.json()
+                    try:
+                        payload = response.json()
+                    except ValueError:
+                        return None
                     return payload if isinstance(payload, dict) else None
                 if response.status_code == 404:
                     return None
@@ -61,7 +64,8 @@ class GitHubAPI:
 
     def get_repo(self, repo: str) -> dict[str, Any] | None:
         """Fetch repository metadata."""
-        return self.get(f"/repos/{repo}")
+        result = self.get(f"/repos/{repo}")
+        return result if isinstance(result, dict) else None
 
     def get_commits(
         self, repo: str, since: datetime | None = None, until: datetime | None = None

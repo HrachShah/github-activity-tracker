@@ -15,12 +15,12 @@ from gh_activity_tracker.storage import ActivityStorage
 class TestGitHubAPI(unittest.TestCase):
     """Tests for GitHub API client."""
 
-    def test_get_rejects_non_object_success_payload(self):
+    def test_get_returns_none_for_malformed_json(self):
         api = GitHubAPI()
         api.session.get = lambda *args, **kwargs: type("Response", (), {
             "status_code": 200,
             "headers": {},
-            "json": lambda self: ["unexpected", "list"],
+            "json": lambda self: (_ for _ in ()).throw(ValueError("invalid JSON")),
             "raise_for_status": lambda self: None,
         })()
 
