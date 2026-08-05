@@ -91,6 +91,9 @@ class GitHubAPI:
         Returns None if the repository cannot be found, to distinguish
         from a valid zero-activity response.
         """
+        if not isinstance(days, int) or isinstance(days, bool) or days < 1:
+            raise ValueError("days must be a positive integer")
+
         since = datetime.now(timezone.utc) - timedelta(days=days)
         repo_data = self.get_repo(repo)
         if not repo_data:

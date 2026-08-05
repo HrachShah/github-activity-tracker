@@ -25,6 +25,14 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_activity_summary_rejects_invalid_day_windows(self):
+        """Activity windows must be positive integer counts of days."""
+        api = GitHubAPI()
+        for days in (0, -1, 1.5, True):
+            with self.subTest(days=days):
+                with self.assertRaisesRegex(ValueError, "days must be a positive integer"):
+                    api.get_activity_summary("owner/repo", days=days)
+
 
 class TestFormatters(unittest.TestCase):
     """Tests for output formatters."""
