@@ -26,6 +26,14 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_repository_helpers_ignore_non_object_payloads(self):
+        """Malformed successful payloads should not crash repository helpers."""
+        api = GitHubAPI()
+        api.get = Mock(return_value=[{"stargazers_count": 4}])
+
+        self.assertIsNone(api.get_repo("owner/repo"))
+        self.assertEqual(api.get_stargazers("owner/repo"), 0)
+
     def test_malformed_rate_limit_headers_do_not_break_requests(self):
         """Unexpected rate-limit headers should not abort an otherwise valid response."""
         api = GitHubAPI()

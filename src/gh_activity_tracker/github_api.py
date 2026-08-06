@@ -64,7 +64,8 @@ class GitHubAPI:
 
     def get_repo(self, repo: str) -> dict[str, Any] | None:
         """Fetch repository metadata."""
-        return self.get(f"/repos/{repo}")
+        data = self.get(f"/repos/{repo}")
+        return data if isinstance(data, dict) else None
 
     def get_commits(
         self, repo: str, since: datetime | None = None, until: datetime | None = None
@@ -81,7 +82,7 @@ class GitHubAPI:
     def get_stargazers(self, repo: str) -> int:
         """Get star count for a repository."""
         data = self.get(f"/repos/{repo}")
-        return data.get("stargazers_count", 0) if data else 0
+        return data.get("stargazers_count", 0) if isinstance(data, dict) else 0
 
     def get_activity_summary(self, repo: str, days: int = 30) -> dict[str, Any] | None:
         """Get activity summary for a repository over N days.
