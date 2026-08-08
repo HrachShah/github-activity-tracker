@@ -15,6 +15,10 @@ class GitHubAPI:
 
     def __init__(self, token: str | None = None, max_retries: int = 3):
         self.token = token or os.environ.get("GITHUB_TOKEN")
+        if isinstance(max_retries, bool) or not isinstance(max_retries, int):
+            raise TypeError("max_retries must be an integer")
+        if max_retries < 1:
+            raise ValueError("max_retries must be positive")
         self.max_retries = max_retries
         self.session = requests.Session()
         if self.token:

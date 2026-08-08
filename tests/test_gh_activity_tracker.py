@@ -21,6 +21,12 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI()
         self.assertIsNone(api.token)
 
+    def test_api_rejects_non_positive_retry_counts(self):
+        for max_retries, error in ((0, ValueError), (True, TypeError), (1.5, TypeError)):
+            with self.subTest(max_retries=max_retries):
+                with self.assertRaises(error):
+                    GitHubAPI(max_retries=max_retries)
+
     def test_api_init_with_token(self):
         """API should use provided token."""
         api = GitHubAPI(token="ghp_test_token")
