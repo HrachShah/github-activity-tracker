@@ -9,6 +9,17 @@ from .storage import ActivityStorage
 from .tracker import ActivityTracker
 
 
+def positive_days(value: str) -> int:
+    """Parse a positive number of days for CLI arguments."""
+    try:
+        days = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("days must be a positive integer") from exc
+    if days < 1:
+        raise argparse.ArgumentTypeError("days must be a positive integer")
+    return days
+
+
 def cmd_track(args: argparse.Namespace) -> None:
     """Handle the track command."""
     tracker = ActivityTracker(token=args.token)
@@ -102,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
     track_parser = subparsers.add_parser("track", help="Track activity for repositories")
     track_parser.add_argument("repos", nargs="*", help="Repository names (owner/repo)")
     track_parser.add_argument("--input", "-i", help="Input file with repo names (one per line)")
-    track_parser.add_argument("--days", "-d", type=int, default=30, help="Days of history (default: 30)")
+    track_parser.add_argument("--days", "-d", type=positive_days, default=30, help="Days of history (default: 30)")
     track_parser.add_argument("--format", "-f", choices=["text", "json", "csv"], default="text", help="Output format")
     track_parser.add_argument("--output", "-o", help="Output file")
     track_parser.add_argument("--token", "-t", help="GitHub token")
@@ -111,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
 
     report_parser = subparsers.add_parser("report", help="Generate activity report")
     report_parser.add_argument("repo", help="Repository name (owner/repo)")
-    report_parser.add_argument("--days", "-d", type=int, default=30, help="Days to analyze")
+    report_parser.add_argument("--days", "-d", type=positive_days, default=30, help="Days to analyze")
     report_parser.add_argument("--format", "-f", choices=["text", "json", "csv"], default="text")
     report_parser.add_argument("--output", "-o", help="Output file")
     report_parser.add_argument("--token", "-t", help="GitHub token")
@@ -127,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
 
     trend_parser = subparsers.add_parser("trend", help="Show activity trends")
     trend_parser.add_argument("repo", help="Repository name")
-    trend_parser.add_argument("--days", "-d", type=int, default=30, help="Number of snapshots")
+    trend_parser.add_argument("--days", "-d", type=positive_days, default=30, help="Number of snapshots")
     trend_parser.set_defaults(func=cmd_trend)
 
     args = parser.parse_args(argv)

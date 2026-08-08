@@ -7,6 +7,7 @@ import tempfile
 from datetime import datetime
 
 from gh_activity_tracker.tracker import ActivityTracker
+import gh_activity_tracker.cli as cli
 from gh_activity_tracker.github_api import GitHubAPI
 from gh_activity_tracker.formatters import format_text, format_json, format_csv
 from gh_activity_tracker.storage import ActivityStorage
@@ -32,6 +33,21 @@ class TestGitHubAPI(unittest.TestCase):
             with self.subTest(days=days):
                 with self.assertRaisesRegex(ValueError, "days must be a positive integer"):
                     api.get_activity_summary("owner/repo", days=days)
+
+
+class TestCLIValidation(unittest.TestCase):
+    def test_positive_days_accepts_positive_integer(self):
+        self.assertEqual(cli.positive_days("7"), 7)
+
+    def test_positive_days_rejects_zero_and_negative_values(self):
+        for value in ("0", "-1"):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(Exception, "days must be a positive integer"):
+                    cli.positive_days(value)
+
+    def test_positive_days_rejects_non_integer_values(self):
+        with self.assertRaisesRegex(Exception, "days must be a positive integer"):
+            cli.positive_days("not-a-number")
 
 
 class TestFormatters(unittest.TestCase):
