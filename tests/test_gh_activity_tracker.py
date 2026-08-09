@@ -44,6 +44,19 @@ class TestGitHubAPI(unittest.TestCase):
         self.assertEqual(summary["commits_7d"], 2)
         self.assertNotIn("commits_30d", summary)
 
+    def test_get_commits_follows_github_pagination(self):
+        """Commit summaries must include commits beyond the first API page."""
+        api = GitHubAPI()
+        first_page = [{"sha": str(index)} for index in range(100)]
+        second_page = [{"sha": "100"}]
+        api.get = Mock(side_effect=[first_page, second_page])
+
+        commits = api.get_commits("owner/repo")
+
+        self.assertEqual(len(commits), 101)
+        self.assertEqual(api.get.call_args_list[0].kwargs["params"]["page"], 1)
+        self.assertEqual(api.get.call_args_list[1].kwargs["params"]["page"], 2)
+
     def test_repository_helpers_ignore_non_object_payloads(self):
         """Malformed successful payloads should not crash repository helpers."""
         api = GitHubAPI()

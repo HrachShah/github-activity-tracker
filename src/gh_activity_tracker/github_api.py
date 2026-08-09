@@ -74,14 +74,23 @@ class GitHubAPI:
     def get_commits(
         self, repo: str, since: datetime | None = None, until: datetime | None = None
     ) -> list[dict[str, Any]]:
-        """Fetch commits within a date range."""
-        params = {"per_page": 100}
-        if since:
-            params["since"] = since.isoformat()
-        if until:
-            params["until"] = until.isoformat()
-        result = self.get(f"/repos/{repo}/commits", params=params)
-        return result if isinstance(result, list) else []
+        """Fetch all commits within a date range."""
+        commits: list[dict[str, Any]] = []
+        page = 1
+        while True:
+            params: dict[str, Any] = {"page": page, "per_page": 100}
+            if since:
+                params["since"] = since.isoformat()
+            if until:
+                params["until"] = until.isoformat()
+            result = self.get(f"/repos/{repo}/commits", params=params)
+            if not isinstance(result, list):
+                break
+            commits.extend(commit for commit in result if isinstance(commit, dict))
+            if len(result) < 100:
+                break
+            page += 1
+        return commits
 
     def get_stargazers(self, repo: str) -> int:
         """Get star count for a repository."""
