@@ -26,6 +26,13 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_api_init_rejects_invalid_retry_count(self):
+        """Retry count must allow at least one request."""
+        for max_retries in (0, -1, 1.5, True):
+            with self.subTest(max_retries=max_retries):
+                with self.assertRaisesRegex(ValueError, "max_retries must be a positive integer"):
+                    GitHubAPI(max_retries=max_retries)
+
     def test_activity_summary_rejects_invalid_day_windows(self):
         """Activity windows must be positive integer counts of days."""
         api = GitHubAPI()
