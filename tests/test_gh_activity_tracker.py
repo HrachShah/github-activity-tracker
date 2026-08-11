@@ -43,6 +43,18 @@ class TestGitHubAPI(unittest.TestCase):
         self.assertIsNone(api.rate_limit_reset)
 
 
+    def test_successful_response_with_invalid_json_returns_none(self):
+        api = GitHubAPI()
+        response = type("Response", (), {
+            "status_code": 200,
+            "headers": {},
+            "json": lambda self: (_ for _ in ()).throw(ValueError("invalid JSON")),
+        })()
+        api.session.get = lambda *args, **kwargs: response
+
+        self.assertIsNone(api.get("/repos/example/project"))
+
+
 class TestFormatters(unittest.TestCase):
     """Tests for output formatters."""
 
