@@ -20,6 +20,9 @@ def cmd_track(args: argparse.Namespace) -> None:
     else:
         repos = args.repos
 
+    if not repos:
+        raise ValueError("provide at least one repository or use --input")
+
     results = tracker.track_multiple(repos, days=args.days)
     output = format_json(results) if args.format == "json" else format_csv(results) if args.format == "csv" else format_text(results)
 
@@ -57,6 +60,9 @@ def cmd_snapshot(args: argparse.Namespace) -> None:
     """Handle the snapshot command."""
     tracker = ActivityTracker(token=args.token)
     storage = ActivityStorage()
+
+    if not args.repos:
+        raise ValueError("provide at least one repository")
 
     for repo in args.repos:
         activity = tracker.track_repo(repo)
