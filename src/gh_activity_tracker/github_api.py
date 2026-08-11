@@ -68,6 +68,8 @@ class GitHubAPI:
                     time.sleep(2 ** attempt)
                     continue
                 return None
+            except ValueError:
+                return None
         return None
 
     def get_repo(self, repo: str) -> dict[str, Any] | None:
