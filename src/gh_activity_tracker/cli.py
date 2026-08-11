@@ -15,7 +15,7 @@ def cmd_track(args: argparse.Namespace) -> None:
     storage = ActivityStorage() if args.save else None
 
     if args.input:
-        with open(args.input, "r") as f:
+        with open(args.input, "r", encoding="utf-8") as f:
             repos = [line.strip() for line in f if line.strip()]
     else:
         repos = args.repos
@@ -24,7 +24,7 @@ def cmd_track(args: argparse.Namespace) -> None:
     output = format_json(results) if args.format == "json" else format_csv(results) if args.format == "csv" else format_text(results)
 
     if args.output:
-        with open(args.output, "w") as f:
+        with open(args.output, "w", encoding="utf-8") as f:
             f.write(output)
         print(f"Written to {args.output}")
     else:
@@ -46,7 +46,7 @@ def cmd_report(args: argparse.Namespace) -> None:
     output = format_json(results) if args.format == "json" else format_csv(results) if args.format == "csv" else format_text(results)
 
     if args.output:
-        with open(args.output, "w") as f:
+        with open(args.output, "w", encoding="utf-8") as f:
             f.write(output)
         print(f"Written to {args.output}")
     else:
