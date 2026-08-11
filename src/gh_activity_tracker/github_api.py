@@ -38,11 +38,15 @@ class GitHubAPI:
     def _update_rate_limit(self, response: requests.Response) -> None:
         """Extract rate limit info from response headers."""
         try:
-            self.rate_limit_remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
-            self.rate_limit_reset = int(response.headers.get("X-RateLimit-Reset", "0"))
+            remaining = int(response.headers.get("X-RateLimit-Remaining", "5000"))
+            reset = int(response.headers.get("X-RateLimit-Reset", "0"))
         except (TypeError, ValueError):
             self.rate_limit_remaining = None
             self.rate_limit_reset = None
+            return
+
+        self.rate_limit_remaining = max(0, remaining)
+        self.rate_limit_reset = max(0, reset)
 
     def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | None:
         """Make a GET request with retry and rate-limit handling."""

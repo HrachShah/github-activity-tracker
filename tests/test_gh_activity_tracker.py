@@ -74,6 +74,17 @@ class TestGitHubAPI(unittest.TestCase):
         self.assertIsNone(api.rate_limit_remaining)
         self.assertIsNone(api.rate_limit_reset)
 
+    def test_negative_rate_limit_headers_are_clamped(self):
+        """Malformed negative counters must not trigger a rate-limit wait."""
+        api = GitHubAPI()
+        response = Mock()
+        response.headers = {"X-RateLimit-Remaining": "-1", "X-RateLimit-Reset": "-2"}
+
+        api._update_rate_limit(response)
+
+        self.assertEqual(api.rate_limit_remaining, 0)
+        self.assertEqual(api.rate_limit_reset, 0)
+
 
 class TestFormatters(unittest.TestCase):
     """Tests for output formatters."""
