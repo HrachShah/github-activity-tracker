@@ -36,6 +36,23 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_get_handles_non_numeric_rate_limit_headers(self):
+        api = GitHubAPI()
+        response = type("Response", (), {
+            "status_code": 200,
+            "headers": {
+                "X-RateLimit-Remaining": "not-a-number",
+                "X-RateLimit-Reset": "also-invalid",
+            },
+            "json": lambda self: {"ok": True},
+            "raise_for_status": lambda self: None,
+        })()
+        api.session.get = lambda *args, **kwargs: response
+
+        self.assertEqual(api.get("/repos/example/project"), {"ok": True})
+        self.assertIsNone(api.rate_limit_remaining)
+        self.assertIsNone(api.rate_limit_reset)
+
 
 class TestFormatters(unittest.TestCase):
     """Tests for output formatters."""
