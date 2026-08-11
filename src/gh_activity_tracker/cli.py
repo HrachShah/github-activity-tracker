@@ -4,6 +4,7 @@ import argparse
 import sys
 from typing import Annotated
 
+
 from .formatters import format_csv, format_json, format_text
 from .storage import ActivityStorage
 from .tracker import ActivityTracker
@@ -15,10 +16,13 @@ def cmd_track(args: argparse.Namespace) -> None:
     storage = ActivityStorage() if args.save else None
 
     if args.input:
-        with open(args.input, "r") as f:
+        with open(args.input, "r", encoding="utf-8") as f:
             repos = [line.strip() for line in f if line.strip()]
     else:
         repos = args.repos
+
+    if not repos:
+        raise ValueError("provide at least one repository or a non-empty --input file")
 
     results = tracker.track_multiple(repos, days=args.days)
     output = format_json(results) if args.format == "json" else format_csv(results) if args.format == "csv" else format_text(results)
