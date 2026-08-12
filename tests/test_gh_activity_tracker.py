@@ -144,6 +144,16 @@ class TestFormatters(unittest.TestCase):
 
         self.assertIn('"C, C++"', result)
 
+    def test_format_csv_rejects_mixed_commit_windows(self):
+        """CSV output must not silently relabel rows from different periods."""
+        data = [
+            {"repo": "old/repo", "commits_7d": 2},
+            {"repo": "new/repo", "commits_30d": 9},
+        ]
+
+        with self.assertRaisesRegex(ValueError, "one commit history window"):
+            format_csv(data)
+
     def test_format_csv_header(self):
         """CSV formatter includes correct headers."""
         data = [{

@@ -34,7 +34,15 @@ def format_csv(data: list[dict[str, Any]]) -> str:
     """Format activity data as CSV."""
     if not data:
         return ""
-    commit_key = next((key for key in data[0] if key.startswith("commits_")), "commits_30d")
+    commit_keys = {
+        key
+        for item in data
+        for key in item
+        if key.startswith("commits_")
+    }
+    if len(commit_keys) > 1:
+        raise ValueError("CSV data must use one commit history window")
+    commit_key = next(iter(commit_keys), "commits_30d")
     headers = ["repo", "stars", "forks", "open_issues", commit_key, "language", "last_updated"]
     output = io.StringIO(newline="")
     writer = csv.writer(output, lineterminator="\n")
