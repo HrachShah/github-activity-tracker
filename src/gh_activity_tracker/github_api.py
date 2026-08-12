@@ -47,7 +47,7 @@ class GitHubAPI:
     def get(self, endpoint: str, params: dict | None = None) -> dict[str, Any] | None:
         """Make a GET request with retry and rate-limit handling."""
         url = f"{DEFAULT_API_URL}{endpoint}"
-        for attempt in range(self.max_retries):
+        for attempt in range(max(1, self.max_retries)):
             self._handle_rate_limit()
             try:
                 response = self.session.get(url, params=params, timeout=30)

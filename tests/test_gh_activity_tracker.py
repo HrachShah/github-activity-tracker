@@ -36,6 +36,18 @@ class TestGitHubAPI(unittest.TestCase):
         api = GitHubAPI(token="ghp_test_token")
         self.assertEqual(api.token, "ghp_test_token")
 
+    def test_get_attempts_once_when_retries_are_zero(self):
+        api = GitHubAPI(max_retries=0)
+        response = type("Response", (), {
+            "status_code": 200,
+            "headers": {},
+            "json": lambda self: {"ok": True},
+            "raise_for_status": lambda self: None,
+        })()
+        api.session.get = lambda *args, **kwargs: response
+
+        self.assertEqual(api.get("/repos/example/project"), {"ok": True})
+
     def test_get_handles_non_numeric_rate_limit_headers(self):
         api = GitHubAPI()
         response = type("Response", (), {
